@@ -1,6 +1,7 @@
 describe('Input form', () => {
     beforeEach(() => {
-        cy.visit('/'); // '/' is filled in from cypress.json "baseUrl"
+        cy.seedAndVisit([]);
+        // cy.visit('/'); // '/' is filled in from cypress.json "baseUrl"
     });
 
     it('focuses input on load', () => {
@@ -17,9 +18,13 @@ describe('Input form', () => {
     })
 
     context('Form submission', () => {
-        const typedText = 'Buy eggs';
-        it('Adds a new todo on submit', () => {
+        beforeEach(() => {
             cy.server();
+        })
+
+        const typedText = 'Buy eggs';
+
+        it('Adds a new todo on submit', () => {
             cy.route('POST', '/api/todos', {
                 name: typedText,
                 id: 1,
@@ -34,8 +39,7 @@ describe('Input form', () => {
                 .and('contain', typedText)
         })
 
-        it.only('Shows an error message on a failed submission', () => {
-            cy.server();
+        it('Shows an error message on a failed submission', () => {
             cy.route({
                 url: '/api/todos',
                 method: 'POST',
@@ -46,7 +50,7 @@ describe('Input form', () => {
             cy.get('.new-todo')
                 .type('test{enter}')
 
-            cy.get('.todo-list li')
+            cy.get('#todo-list li')
                 .should('not.exist')
 
             cy.get('.error')
