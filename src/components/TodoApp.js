@@ -3,7 +3,7 @@ import {BrowserRouter as Router} from 'react-router-dom'
 import TodoForm from './TodoForm'
 import TodoList from './TodoList'
 import Footer from './Footer'
-import {saveTodo, loadTodos, destroyTodo} from "../lib/service";
+import {saveTodo, loadTodos, destroyTodo, updateTodo} from "../lib/service";
 
 export default class TodoApp extends Component {
     constructor(props) {
@@ -16,6 +16,7 @@ export default class TodoApp extends Component {
         this.handleNewTodoChange = this.handleNewTodoChange.bind(this);
         this.handleTodoSubmit = this.handleTodoSubmit.bind(this);
         this.handleDelete = this.handleDelete.bind(this);
+        this.handleToggle = this.handleToggle.bind(this);
     }
 
     componentDidMount() {
@@ -28,7 +29,7 @@ export default class TodoApp extends Component {
         this.setState({currentTodo: evt.target.value})
     }
 
-    handleTodoSubmit (evt) {
+    handleTodoSubmit(evt) {
         evt.preventDefault();
         const newTodo = {name: this.state.currentTodo, isComplete: false};
         saveTodo(newTodo)
@@ -39,11 +40,29 @@ export default class TodoApp extends Component {
             .catch(() => this.setState({error: true}));
     }
 
-    handleDelete (id) {
+    handleDelete(id) {
         destroyTodo(id)
             .then(() => this.setState({
                 todos: this.state.todos.filter(t => t.id !== id)
             }))
+    }
+
+    handleToggle(id) {
+        const targetTodo = this.state.todos.find(t => t.id === id);
+        const updated = {
+            ...targetTodo,
+            isComplete: !targetTodo.isComplete
+        };
+
+        updateTodo(updated)
+            .then(({data}) => {
+                // debugger;
+                const todos = this.state.todos.map(
+                    t => t.id === data.id ? data : t
+                )
+
+                this.setState({todos: todos})
+            })
     }
 
     render() {
@@ -54,7 +73,7 @@ export default class TodoApp extends Component {
                 <div>
                     <header className="header">
                         <h1>todos</h1>
-                        {this.state.error && <span className='error'>Oh no!</span> }
+                        {this.state.error && <span className='error'>Oh no!</span>}
                         <TodoForm currentTodo={this.state.currentTodo}
                                   handleTodoSubmit={this.handleTodoSubmit}
                                   handleNewTodoChange={this.handleNewTodoChange}
@@ -63,6 +82,7 @@ export default class TodoApp extends Component {
                     <section className="main">
                         <TodoList todos={this.state.todos}
                                   handleDelete={this.handleDelete}
+                                  handleToggle={this.handleToggle}
                         />
                     </section>
                     <Footer remaining={remaining}/>
